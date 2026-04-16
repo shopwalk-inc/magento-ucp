@@ -1,0 +1,78 @@
+<?php
+/**
+ * Copyright © Shopwalk Inc. All rights reserved.
+ * Licensed under GPL-2.0-or-later.
+ *
+ * @var \Shopwalk\Ucp\Block\Adminhtml\Dashboard $block
+ * @var \Magento\Framework\Escaper $escaper
+ */
+?>
+<div class="shopwalk-ucp-dashboard" style="padding:24px;max-width:960px">
+    <h1 style="margin-top:0"><?= $escaper->escapeHtml(__('Shopwalk UCP')) ?></h1>
+    <p style="color:#888">
+        <?= $escaper->escapeHtml(__('UCP Protocol version: %1 · Module version: %2', $block->getUcpVersion(), $block->getModuleVersion())) ?>
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:24px 0">
+        <div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;margin-bottom:4px"><?= $escaper->escapeHtml(__('Connection')) ?></div>
+            <?php if ($block->isConnected()): ?>
+                <div style="font-size:20px;color:#059669;font-weight:600">✔ <?= $escaper->escapeHtml(__('Connected')) ?></div>
+            <?php else: ?>
+                <div style="font-size:20px;color:#dc2626;font-weight:600">✗ <?= $escaper->escapeHtml(__('Not connected')) ?></div>
+            <?php endif; ?>
+        </div>
+        <div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;margin-bottom:4px"><?= $escaper->escapeHtml(__('Partner ID')) ?></div>
+            <div style="font-family:monospace;font-size:14px;word-break:break-all"><?= $escaper->escapeHtml($block->getPartnerId()) ?></div>
+        </div>
+        <div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;margin-bottom:4px"><?= $escaper->escapeHtml(__('Last sync')) ?></div>
+            <div style="font-size:14px"><?= $escaper->escapeHtml($block->getLastSyncAt()) ?></div>
+            <div style="font-size:12px;color:#6b7280;margin-top:4px"><?= $escaper->escapeHtml(__('State: %1', $block->getSyncState())) ?></div>
+        </div>
+        <div style="padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+            <div style="font-size:12px;color:#6b7280;text-transform:uppercase;margin-bottom:4px"><?= $escaper->escapeHtml(__('Queue depth')) ?></div>
+            <div style="font-size:24px;font-weight:600"><?= (int) $block->getQueueDepth() ?></div>
+        </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-top:24px">
+        <button id="shopwalk-ucp-sync-now" class="action-default" type="button"
+                data-url="<?= $escaper->escapeHtmlAttr($block->getSyncNowUrl()) ?>"
+                <?= $block->isConnected() ? '' : 'disabled' ?>>
+            <?= $escaper->escapeHtml(__('Sync Now')) ?>
+        </button>
+        <a href="<?= $escaper->escapeHtmlAttr($block->getPartnerPortalUrl()) ?>"
+           target="_blank" class="action-default">
+            <?= $escaper->escapeHtml(__('Partner Portal ↗')) ?>
+        </a>
+    </div>
+
+    <p id="shopwalk-ucp-status" style="margin-top:16px;color:#6b7280"></p>
+</div>
+
+<script>
+    require(['jquery', 'Magento_Ui/js/modal/alert'], function($, alert) {
+        $('#shopwalk-ucp-sync-now').on('click', function() {
+            var $btn = $(this);
+            var $status = $('#shopwalk-ucp-status');
+            var url = $btn.data('url');
+            $btn.prop('disabled', true).text('<?= $escaper->escapeJs(__('Syncing...')) ?>');
+            $status.text('');
+            $.ajax({
+                url: url,
+                method: 'POST',
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp) {
+                $status.text(resp.message || 'Done.').css('color', '#059669');
+            }).fail(function(xhr) {
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Sync failed';
+                $status.text(msg).css('color', '#dc2626');
+            }).always(function() {
+                $btn.prop('disabled', false).text('<?= $escaper->escapeJs(__('Sync Now')) ?>');
+            });
+        });
+    });
+</script>

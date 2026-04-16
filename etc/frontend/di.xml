@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+  Register a custom router so /.well-known/ucp gets dispatched to our
+  WellKnown\Ucp action. The standard router can't match a path starting
+  with a dot, so we insert ours ahead of the standard one.
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\App\RouterList">
+        <arguments>
+            <argument name="routerList" xsi:type="array">
+                <item name="shopwalk_ucp_well_known" xsi:type="array">
+                    <item name="class" xsi:type="string">Shopwalk\Ucp\Controller\Router\WellKnownRouter</item>
+                    <item name="disable" xsi:type="boolean">false</item>
+                    <item name="sortOrder" xsi:type="string">10</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
+</config>

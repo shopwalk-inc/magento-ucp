@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Acl/etc/acl.xsd">
+    <acl>
+        <resources>
+            <resource id="Magento_Backend::admin">
+                <resource id="Shopwalk_Ucp::main" title="Shopwalk UCP" sortOrder="90">
+                    <resource id="Shopwalk_Ucp::dashboard" title="Dashboard"/>
+                    <resource id="Shopwalk_Ucp::config" title="Configuration"/>
+                    <resource id="Shopwalk_Ucp::sync" title="Sync Operations"/>
+                </resource>
+            </resource>
+        </resources>
+    </acl>
+</config>

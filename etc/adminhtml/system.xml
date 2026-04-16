@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="shopwalk" translate="label" sortOrder="500">
+            <label>Shopwalk</label>
+        </tab>
+        <section id="shopwalk_ucp" translate="label" sortOrder="10"
+                 showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>UCP Settings</label>
+            <tab>shopwalk</tab>
+            <resource>Shopwalk_Ucp::config</resource>
+            <group id="general" translate="label" sortOrder="10"
+                   showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>General</label>
+                <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Enable UCP Endpoints</label>
+                    <comment>Exposes the /rest/V1/ucp/* REST endpoints and /.well-known/ucp discovery.</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>
+            <group id="license" translate="label" sortOrder="20"
+                   showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Shopwalk License (optional)</label>
+                <field id="key" translate="label comment" type="obscure" sortOrder="10"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>License Key</label>
+                    <comment><![CDATA[Your Shopwalk license key from the <a href="https://shopwalk.com/partners" target="_blank">Partner Portal</a>. Leave blank to run UCP standalone.]]></comment>
+                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                </field>
+                <field id="partner_id" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Partner ID</label>
+                    <comment>Populated automatically on activation.</comment>
+                    <frontend_model>Shopwalk\Ucp\Block\Adminhtml\System\Config\ReadonlyField</frontend_model>
+                </field>
+            </group>
+            <group id="sync" translate="label" sortOrder="30"
+                   showInDefault="1" showInWebsite="0" showInStore="0">
+                <label>Sync</label>
+                <field id="api_base" translate="label comment" type="text" sortOrder="10"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Shopwalk API Base URL</label>
+                    <comment>Default: https://api.shopwalk.com/api/v1. Override for staging.</comment>
+                </field>
+                <field id="last_sync_at" translate="label" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Last Sync</label>
+                    <frontend_model>Shopwalk\Ucp\Block\Adminhtml\System\Config\ReadonlyField</frontend_model>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

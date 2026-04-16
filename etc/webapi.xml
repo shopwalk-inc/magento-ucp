@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<!--
+  All UCP REST routes. Anonymous where the protocol allows it; self for
+  authenticated checkout (OAuth token); anonymous for sync/trigger because
+  HMAC is enforced inside the implementation.
+-->
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Webapi:etc/webapi.xsd">
+
+    <!-- Store info -->
+    <route url="/V1/ucp/store" method="GET">
+        <service class="Shopwalk\Ucp\Api\StoreInterface" method="getInfo"/>
+        <resources><resource ref="anonymous"/></resources>
+    </route>
+
+    <!-- Product listing -->
+    <route url="/V1/ucp/products" method="GET">
+        <service class="Shopwalk\Ucp\Api\ProductsInterface" method="getList"/>
+        <resources><resource ref="anonymous"/></resources>
+    </route>
+    <route url="/V1/ucp/products/:productId" method="GET">
+        <service class="Shopwalk\Ucp\Api\ProductsInterface" method="getById"/>
+        <resources><resource ref="anonymous"/></resources>
+    </route>
+
+    <!-- Categories -->
+    <route url="/V1/ucp/categories" method="GET">
+        <service class="Shopwalk\Ucp\Api\CategoriesInterface" method="getTree"/>
+        <resources><resource ref="anonymous"/></resources>
+    </route>
+
+    <!-- Checkout — OAuth bearer token required -->
+    <route url="/V1/ucp/checkout-sessions" method="POST">
+        <service class="Shopwalk\Ucp\Api\CheckoutInterface" method="create"/>
+        <resources><resource ref="self"/></resources>
+    </route>
+    <route url="/V1/ucp/checkout-sessions/:sessionId" method="GET">
+        <service class="Shopwalk\Ucp\Api\CheckoutInterface" method="getStatus"/>
+        <resources><resource ref="self"/></resources>
+    </route>
+    <route url="/V1/ucp/checkout-sessions/:sessionId/complete" method="POST">
+        <service class="Shopwalk\Ucp\Api\CheckoutInterface" method="complete"/>
+        <resources><resource ref="self"/></resources>
+    </route>
+
+    <!-- Sync trigger — HMAC enforced in the service -->
+    <route url="/V1/ucp/sync/trigger" method="POST">
+        <service class="Shopwalk\Ucp\Api\SyncTriggerInterface" method="trigger"/>
+        <resources><resource ref="anonymous"/></resources>
+    </route>
+
+</routes>
