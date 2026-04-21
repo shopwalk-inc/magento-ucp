@@ -5,7 +5,7 @@
     "license": "proprietary",
     "require": {
         "php": ">=8.1",
-        "magento/framework": "*"
+        "magento/framework": "^103.0"
     },
     "autoload": {
         "files": ["registration.php"],
