@@ -4,11 +4,16 @@
     <acl>
         <resources>
             <resource id="Magento_Backend::admin">
-                <resource id="Shopwalk_Ucp::main" title="Shopwalk UCP" sortOrder="90">
-                    <resource id="Shopwalk_Ucp::dashboard" title="Dashboard"/>
-                    <resource id="Shopwalk_Ucp::config" title="Configuration"/>
-                    <resource id="Shopwalk_Ucp::sync" title="Sync Operations"/>
+                <resource id="Magento_Backend::stores">
+                    <resource id="Magento_Backend::stores_settings">
+                        <resource id="Magento_Config::config">
+                            <resource id="Shopwalk_Ucp::config" title="Shopwalk UCP Configuration"
+                                      sortOrder="100"/>
+                        </resource>
+                    </resource>
                 </resource>
+                <resource id="Shopwalk_Ucp::manage" title="Manage Shopwalk UCP Settings"
+                          sortOrder="200"/>
             </resource>
         </resources>
     </acl>

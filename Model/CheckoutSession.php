@@ -1,264 +1,534 @@
 <?php
-/**
- * Copyright © Shopwalk Inc. All rights reserved.
- * Licensed under GPL-2.0-or-later.
- */
+
 declare(strict_types=1);
 
 namespace Shopwalk\Ucp\Model;
 
+use Shopwalk\Ucp\Api\CheckoutSessionInterface;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
-use Magento\ConfigurableProduct\Model\Product\Type\Configurable as ConfigurableType;
-use Magento\Framework\App\Config\Storage\WriterInterface as ConfigWriter;
-use Magento\Framework\App\Config\ReinitableConfigInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\DataObject;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Phrase;
-use Magento\Framework\Webapi\Exception as WebapiException;
-use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Quote\Api\CartManagementInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteFactory;
-use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
-use Shopwalk\Ucp\Api\CheckoutInterface;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Stdlib\DateTime\DateTime;
 
 /**
- * Checkout session lifecycle: create quote → confirm payment → place order.
+ * Full checkout-session lifecycle: create, get, update, complete, cancel.
  *
- * Sessions are keyed by a random id and mapped to Magento quote IDs in
- * core_config_data under shopwalk_ucp/checkout/sessions. Sessions expire
- * after 30 minutes.
+ * Sessions are persisted in shopwalk_ucp_checkout_sessions. Completing a
+ * session creates a real Magento order via QuoteManagement::submit().
  */
-class CheckoutSession implements CheckoutInterface
+class CheckoutSession implements CheckoutSessionInterface
 {
-    private const SESSION_TTL = 1800;
-    private const SESSIONS_PATH = 'shopwalk_ucp/checkout/sessions';
+    private const TABLE = 'shopwalk_ucp_checkout_sessions';
+    private const STATUS_INCOMPLETE          = 'incomplete';
+    private const STATUS_READY_FOR_COMPLETE  = 'ready_for_complete';
+    private const STATUS_COMPLETED           = 'completed';
+    private const STATUS_CANCELED            = 'canceled';
+    private const SESSION_TTL_HOURS          = 24;
+
+    private AdapterInterface $connection;
 
     public function __construct(
-        private readonly ProductRepositoryInterface $productRepository,
-        private readonly ConfigurableType $configurableType,
-        private readonly QuoteFactory $quoteFactory,
-        private readonly CartRepositoryInterface $quoteRepository,
-        private readonly CartManagementInterface $quoteManagement,
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly ScopeConfigInterface $scopeConfig,
-        private readonly ConfigWriter $configWriter,
-        private readonly ReinitableConfigInterface $reinitableConfig,
-        private readonly UcpEnvelope $envelope,
-    ) {}
+        private ResourceConnection          $resource,
+        private ProductRepositoryInterface  $productRepository,
+        private StockRegistryInterface      $stockRegistry,
+        private CartManagementInterface     $cartManagement,
+        private CartRepositoryInterface     $cartRepository,
+        private QuoteFactory                $quoteFactory,
+        private StoreManagerInterface       $storeManager,
+        private OrderRepositoryInterface    $orderRepository,
+        private ScopeConfigInterface        $scopeConfig,
+        private DateTime                    $dateTime
+    ) {
+        $this->connection = $resource->getConnection();
+    }
 
+    /* ------------------------------------------------------------------
+     *  CREATE
+     * ----------------------------------------------------------------*/
+
+    /**
+     * @inheritdoc
+     */
     public function create(array $data): array
     {
-        $productId = (int) ($data['product_id'] ?? 0);
-        if ($productId <= 0) {
-            throw new WebapiException(new Phrase('product_id is required'), 0, WebapiException::HTTP_BAD_REQUEST);
-        }
-        try {
-            $product = $this->productRepository->getById($productId);
-        } catch (NoSuchEntityException) {
-            throw new WebapiException(new Phrase('Product not found'), 0, WebapiException::HTTP_NOT_FOUND);
-        }
-        if (!$product->isSalable()) {
-            throw new WebapiException(new Phrase('Product is out of stock'), 0, WebapiException::HTTP_CONFLICT);
-        }
-
-        $quote = $this->quoteFactory->create();
-        $quote->setStoreId((int) $this->storeManager->getStore()->getId());
-
-        $request = new DataObject(['qty' => max(1, (int) ($data['quantity'] ?? 1))]);
-        if (!empty($data['variant_id'])) {
-            $superAttrs = $this->resolveVariantAttributes($product, (int) $data['variant_id']);
-            if ($superAttrs) {
-                $request->setData('super_attribute', $superAttrs);
+        // Idempotency-Key support
+        $idempotencyKey = $data['idempotency_key'] ?? null;
+        if ($idempotencyKey) {
+            $existing = $this->findByIdempotencyKey($idempotencyKey);
+            if ($existing) {
+                return UcpResponse::ok($this->formatSession($existing));
             }
         }
 
-        try {
-            $quote->addProduct($product, $request);
-        } catch (LocalizedException $e) {
-            throw new WebapiException(new Phrase($e->getMessage()), 0, WebapiException::HTTP_BAD_REQUEST);
+        // Validate line items
+        $lineItems = $data['line_items'] ?? [];
+        if (empty($lineItems)) {
+            return UcpResponse::error('invalid_request', 'line_items is required and cannot be empty.');
         }
 
-        $shipping = $data['shipping_address'] ?? [];
-        if (!$shipping) {
-            throw new WebapiException(new Phrase('shipping_address is required'), 0, WebapiException::HTTP_BAD_REQUEST);
-        }
-        $shippingAddress = $quote->getShippingAddress();
-        $shippingAddress->addData($shipping);
-        $shippingAddress->setCollectShippingRates(true);
-        $shippingAddress->collectShippingRates();
+        $validatedItems = [];
+        $subtotal       = 0.0;
 
-        $rateCode = $this->pickCheapestRate($shippingAddress);
-        if ($rateCode !== null) {
-            $shippingAddress->setShippingMethod($rateCode);
-        }
+        foreach ($lineItems as $index => $item) {
+            $productId = $item['product_id'] ?? null;
+            $quantity  = (int) ($item['quantity'] ?? 1);
 
-        $quote->getPayment()->setMethod('shopwalk_ucp');
-        $quote->setCustomerIsGuest(true);
-        $quote->setCustomerEmail((string) ($shipping['email'] ?? 'ucp-agent@shopwalk.com'));
-        $quote->collectTotals();
-        $this->quoteRepository->save($quote);
+            if (!$productId) {
+                return UcpResponse::error(
+                    'invalid_line_item',
+                    sprintf('line_items[%d] requires product_id.', $index)
+                );
+            }
 
-        $sessionId = 'ucp_sess_' . bin2hex(random_bytes(16));
-        $this->saveSession($sessionId, (int) $quote->getId());
+            try {
+                $product = $this->productRepository->getById($productId);
+            } catch (\Exception $e) {
+                return UcpResponse::error(
+                    'product_not_found',
+                    sprintf('Product %d not found.', $productId)
+                );
+            }
 
-        return [
-            'session_id' => $sessionId,
-            'status' => 'pending',
-            'subtotal' => (float) $quote->getSubtotal(),
-            'shipping' => (float) $shippingAddress->getShippingAmount(),
-            'tax' => (float) $shippingAddress->getTaxAmount(),
-            'total' => (float) $quote->getGrandTotal(),
-            'currency' => (string) $quote->getQuoteCurrencyCode(),
-            'checkout_url' => rtrim($this->storeManager->getStore()->getBaseUrl(), '/') . '/ucp/checkout/' . $sessionId,
-            'expires_at' => gmdate('c', time() + self::SESSION_TTL),
-            'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout']),
-        ];
-    }
-
-    public function getStatus(string $sessionId): array
-    {
-        $map = $this->loadSessions();
-        $entry = $map[$sessionId] ?? null;
-        if (!$entry) {
-            throw new WebapiException(new Phrase('Session not found'), 0, WebapiException::HTTP_NOT_FOUND);
-        }
-        if (!empty($entry['order_id'])) {
-            return [
-                'session_id' => $sessionId,
-                'status' => 'confirmed',
-                'order_id' => $entry['order_id'],
-                'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout']),
-            ];
-        }
-        if ((int) $entry['created_at'] + self::SESSION_TTL < time()) {
-            return [
-                'session_id' => $sessionId,
-                'status' => 'expired',
-                'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout']),
-            ];
-        }
-        return [
-            'session_id' => $sessionId,
-            'status' => 'pending',
-            'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout']),
-        ];
-    }
-
-    public function complete(string $sessionId, array $data): array
-    {
-        $map = $this->loadSessions();
-        $entry = $map[$sessionId] ?? null;
-        if (!$entry) {
-            throw new WebapiException(new Phrase('Session not found'), 0, WebapiException::HTTP_NOT_FOUND);
-        }
-        if (!empty($entry['order_id'])) {
-            return [
-                'session_id' => $sessionId,
-                'status' => 'confirmed',
-                'order_id' => $entry['order_id'],
-                'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout']),
-            ];
-        }
-        $quoteId = (int) $entry['quote_id'];
-        $quote = $this->quoteRepository->get($quoteId);
-        $orderId = $this->quoteManagement->placeOrder($quoteId);
-        $order = $this->orderRepository->get($orderId);
-
-        $payment = $order->getPayment();
-        $payment->setAdditionalInformation('ucp_session_id', $sessionId);
-        if (!empty($data['payment_id'])) {
-            $payment->setAdditionalInformation('ucp_payment_id', (string) $data['payment_id']);
-        }
-        if (isset($data['paid_amount'])) {
-            $payment->setAmountPaid((float) $data['paid_amount']);
-        }
-        $order->setState(Order::STATE_PROCESSING)->setStatus('processing');
-        $this->orderRepository->save($order);
-
-        $map[$sessionId]['order_id'] = $order->getIncrementId();
-        $this->writeSessions($map);
-
-        return [
-            'session_id' => $sessionId,
-            'status' => 'confirmed',
-            'order_id' => $order->getIncrementId(),
-            'ucp' => $this->envelope->build(['dev.ucp.shopping.checkout', 'dev.ucp.shopping.order']),
-        ];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function resolveVariantAttributes(\Magento\Catalog\Api\Data\ProductInterface $product, int $variantId): array
-    {
-        if ($product->getTypeId() !== ConfigurableType::TYPE_CODE) {
-            return [];
-        }
-        try {
-            $variant = $this->productRepository->getById($variantId);
-        } catch (NoSuchEntityException) {
-            return [];
-        }
-        $out = [];
-        foreach ($this->configurableType->getConfigurableAttributes($product) as $attr) {
-            $attrId = (int) $attr->getAttributeId();
-            $code = $attr->getProductAttribute()->getAttributeCode();
-            $out[$attrId] = (string) $variant->getData($code);
-        }
-        return $out;
-    }
-
-    private function pickCheapestRate(\Magento\Quote\Model\Quote\Address $address): ?string
-    {
-        $cheapest = null;
-        $cheapestPrice = PHP_FLOAT_MAX;
-        foreach ($address->getGroupedAllShippingRates() as $rates) {
-            foreach ($rates as $rate) {
-                $price = (float) $rate->getPrice();
-                if ($price < $cheapestPrice) {
-                    $cheapestPrice = $price;
-                    $cheapest = (string) $rate->getCode();
+            // Stock check
+            try {
+                $stockItem = $this->stockRegistry->getStockItem($product->getId());
+                if (!$stockItem->getIsInStock()) {
+                    return UcpResponse::error(
+                        'out_of_stock',
+                        sprintf('Product "%s" is out of stock.', $product->getName())
+                    );
                 }
+                if ($stockItem->getManageStock() && $stockItem->getQty() < $quantity) {
+                    return UcpResponse::error(
+                        'insufficient_stock',
+                        sprintf(
+                            'Only %d of "%s" available (requested %d).',
+                            (int) $stockItem->getQty(),
+                            $product->getName(),
+                            $quantity
+                        )
+                    );
+                }
+            } catch (\Exception $e) {
+                // Stock data unavailable; proceed cautiously
             }
+
+            $price      = (float) $product->getFinalPrice();
+            $itemTotal   = $price * $quantity;
+            $subtotal   += $itemTotal;
+
+            $validatedItems[] = [
+                'index'      => $index,
+                'product_id' => (int) $product->getId(),
+                'variant_id' => $item['variant_id'] ?? null,
+                'name'       => $product->getName(),
+                'sku'        => $product->getSku(),
+                'quantity'   => $quantity,
+                'unit_price' => UcpResponse::toCents($price),
+                'subtotal'   => UcpResponse::toCents($itemTotal),
+            ];
         }
-        return $cheapest;
+
+        $sessionId = 'chk_' . bin2hex(random_bytes(16));
+        $now       = $this->dateTime->gmtDate();
+        $expiresAt = $this->dateTime->gmtDate(
+            'Y-m-d H:i:s',
+            strtotime('+' . self::SESSION_TTL_HOURS . ' hours')
+        );
+
+        $buyer       = $data['buyer'] ?? new \stdClass();
+        $fulfillment = $data['fulfillment'] ?? new \stdClass();
+        $payment     = $data['payment'] ?? new \stdClass();
+        $totals      = UcpResponse::buildTotals($subtotal, 0.0, 0.0, 0.0, $subtotal);
+
+        $currency = $this->storeManager->getStore()->getCurrentCurrencyCode();
+        $totals['currency'] = $currency;
+
+        $row = [
+            'id'              => $sessionId,
+            'client_id'       => $data['client_id'] ?? null,
+            'user_id'         => $data['user_id'] ?? null,
+            'status'          => self::STATUS_INCOMPLETE,
+            'line_items'      => json_encode($validatedItems),
+            'buyer'           => json_encode($buyer),
+            'fulfillment'     => json_encode($fulfillment),
+            'payment'         => json_encode($payment),
+            'totals'          => json_encode($totals),
+            'messages'        => json_encode([]),
+            'order_id'        => null,
+            'idempotency_key' => $idempotencyKey,
+            'created_at'      => $now,
+            'updated_at'      => $now,
+            'expires_at'      => $expiresAt,
+        ];
+
+        $this->connection->insert($this->resource->getTableName(self::TABLE), $row);
+
+        return UcpResponse::ok($this->formatSession($row));
+    }
+
+    /* ------------------------------------------------------------------
+     *  GET
+     * ----------------------------------------------------------------*/
+
+    /**
+     * @inheritdoc
+     */
+    public function get(string $id): array
+    {
+        $session = $this->loadSession($id);
+        if (!$session) {
+            return UcpResponse::error('session_not_found', 'Checkout session not found.');
+        }
+
+        return UcpResponse::ok($this->formatSession($session));
+    }
+
+    /* ------------------------------------------------------------------
+     *  UPDATE (full replace)
+     * ----------------------------------------------------------------*/
+
+    /**
+     * @inheritdoc
+     */
+    public function update(string $id, array $data): array
+    {
+        $session = $this->loadSession($id);
+        if (!$session) {
+            return UcpResponse::error('session_not_found', 'Checkout session not found.');
+        }
+
+        if (in_array($session['status'], [self::STATUS_COMPLETED, self::STATUS_CANCELED], true)) {
+            return UcpResponse::error(
+                'session_closed',
+                sprintf('Session is already %s.', $session['status'])
+            );
+        }
+
+        $updates = [];
+
+        if (isset($data['buyer'])) {
+            $updates['buyer'] = json_encode($data['buyer']);
+        }
+        if (isset($data['fulfillment'])) {
+            $updates['fulfillment'] = json_encode($data['fulfillment']);
+        }
+        if (isset($data['payment'])) {
+            $updates['payment'] = json_encode($data['payment']);
+        }
+        if (isset($data['line_items'])) {
+            $updates['line_items'] = json_encode($data['line_items']);
+        }
+
+        // Recalculate totals if line_items changed
+        if (isset($data['line_items'])) {
+            $subtotal = 0.0;
+            foreach ($data['line_items'] as $item) {
+                $subtotal += (float) ($item['subtotal'] ?? 0) / 100;
+            }
+            $shipping  = (float) ($data['shipping_total'] ?? 0);
+            $tax       = (float) ($data['tax_total'] ?? 0);
+            $discount  = (float) ($data['discount_total'] ?? 0);
+            $total     = $subtotal + $shipping + $tax - $discount;
+            $currency  = $this->storeManager->getStore()->getCurrentCurrencyCode();
+            $totals    = UcpResponse::buildTotals($subtotal, $shipping, $tax, $discount, $total);
+            $totals['currency'] = $currency;
+            $updates['totals']  = json_encode($totals);
+        }
+
+        // Auto-transition to ready_for_complete when buyer + fulfillment + payment all present
+        $buyerData       = isset($updates['buyer'])
+            ? json_decode($updates['buyer'], true)
+            : json_decode($session['buyer'], true);
+        $fulfillmentData = isset($updates['fulfillment'])
+            ? json_decode($updates['fulfillment'], true)
+            : json_decode($session['fulfillment'], true);
+        $paymentData     = isset($updates['payment'])
+            ? json_decode($updates['payment'], true)
+            : json_decode($session['payment'], true);
+
+        $hasRequiredFields = !empty($buyerData) && is_array($buyerData)
+            && !empty($fulfillmentData) && is_array($fulfillmentData)
+            && !empty($paymentData) && is_array($paymentData)
+            && !empty($buyerData['email']);
+
+        if ($hasRequiredFields) {
+            $updates['status'] = self::STATUS_READY_FOR_COMPLETE;
+        }
+
+        $updates['updated_at'] = $this->dateTime->gmtDate();
+
+        $this->connection->update(
+            $this->resource->getTableName(self::TABLE),
+            $updates,
+            ['id = ?' => $id]
+        );
+
+        $session = $this->loadSession($id);
+
+        return UcpResponse::ok($this->formatSession($session));
+    }
+
+    /* ------------------------------------------------------------------
+     *  COMPLETE — create a real Magento order
+     * ----------------------------------------------------------------*/
+
+    /**
+     * @inheritdoc
+     */
+    public function complete(string $id, array $data = []): array
+    {
+        $session = $this->loadSession($id);
+        if (!$session) {
+            return UcpResponse::error('session_not_found', 'Checkout session not found.');
+        }
+
+        if ($session['status'] === self::STATUS_COMPLETED) {
+            return UcpResponse::error('already_completed', 'Session is already completed.');
+        }
+        if ($session['status'] === self::STATUS_CANCELED) {
+            return UcpResponse::error('session_canceled', 'Session has been canceled.');
+        }
+
+        $lineItems   = json_decode($session['line_items'], true);
+        $buyer       = json_decode($session['buyer'], true);
+        $fulfillment = json_decode($session['fulfillment'], true);
+        $payment     = json_decode($session['payment'], true);
+
+        if (empty($buyer['email'])) {
+            return UcpResponse::error('missing_buyer', 'Buyer email is required to complete checkout.');
+        }
+
+        try {
+            $store   = $this->storeManager->getStore();
+            $storeId = (int) $store->getId();
+
+            // Create a new quote
+            $quote = $this->quoteFactory->create();
+            $quote->setStoreId($storeId);
+            $quote->setIsMultiShipping(false);
+
+            // Set customer as guest
+            $quote->setCustomerIsGuest(true);
+            $quote->setCustomerEmail($buyer['email']);
+            $quote->setCustomerFirstname($buyer['first_name'] ?? 'Guest');
+            $quote->setCustomerLastname($buyer['last_name'] ?? 'Shopper');
+
+            // Add items
+            foreach ($lineItems as $item) {
+                $product = $this->productRepository->getById($item['product_id']);
+                $product->setPrice($item['unit_price'] / 100);
+                $quote->addProduct($product, (int) $item['quantity']);
+            }
+
+            // Shipping address
+            $shippingAddress = $fulfillment['destination'] ?? $fulfillment['shipping_address'] ?? [];
+            $billingAddress  = $buyer['billing_address'] ?? $shippingAddress;
+
+            $quote->getBillingAddress()->addData($this->mapAddress($billingAddress, $buyer));
+            $quote->getShippingAddress()->addData($this->mapAddress($shippingAddress, $buyer));
+
+            // Shipping method
+            $shippingMethod = $fulfillment['shipping_method'] ?? 'flatrate_flatrate';
+            $quote->getShippingAddress()
+                ->setCollectShippingRates(true)
+                ->collectShippingRates()
+                ->setShippingMethod($shippingMethod);
+
+            // Payment method
+            $paymentMethod = $payment['method'] ?? $data['payment_method'] ?? 'checkmo';
+            $quote->setPaymentMethod($paymentMethod);
+            $quote->getPayment()->importData(['method' => $paymentMethod]);
+
+            $quote->collectTotals();
+            $this->cartRepository->save($quote);
+
+            // Place the order
+            $orderId = $this->cartManagement->placeOrder($quote->getId());
+            $order   = $this->orderRepository->get($orderId);
+
+            // Mark session completed
+            $this->connection->update(
+                $this->resource->getTableName(self::TABLE),
+                [
+                    'status'     => self::STATUS_COMPLETED,
+                    'order_id'   => (int) $order->getEntityId(),
+                    'updated_at' => $this->dateTime->gmtDate(),
+                ],
+                ['id = ?' => $id]
+            );
+
+            $baseUrl = rtrim($store->getBaseUrl(), '/');
+
+            return UcpResponse::ok([
+                'session_id'    => $id,
+                'status'        => self::STATUS_COMPLETED,
+                'order'         => [
+                    'id'            => (int) $order->getEntityId(),
+                    'increment_id'  => $order->getIncrementId(),
+                    'status'        => $order->getStatus(),
+                    'permalink_url' => $baseUrl . '/sales/order/view/order_id/' . $order->getEntityId(),
+                    'totals'        => UcpResponse::buildTotals(
+                        (float) $order->getSubtotal(),
+                        (float) $order->getShippingAmount(),
+                        (float) $order->getTaxAmount(),
+                        abs((float) $order->getDiscountAmount()),
+                        (float) $order->getGrandTotal()
+                    ),
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return UcpResponse::error(
+                'order_creation_failed',
+                'Failed to create order: ' . $e->getMessage(),
+                'fatal'
+            );
+        }
+    }
+
+    /* ------------------------------------------------------------------
+     *  CANCEL
+     * ----------------------------------------------------------------*/
+
+    /**
+     * @inheritdoc
+     */
+    public function cancel(string $id): array
+    {
+        $session = $this->loadSession($id);
+        if (!$session) {
+            return UcpResponse::error('session_not_found', 'Checkout session not found.');
+        }
+
+        if ($session['status'] === self::STATUS_COMPLETED) {
+            return UcpResponse::error(
+                'session_completed',
+                'Cannot cancel a completed session.'
+            );
+        }
+
+        $this->connection->update(
+            $this->resource->getTableName(self::TABLE),
+            [
+                'status'     => self::STATUS_CANCELED,
+                'updated_at' => $this->dateTime->gmtDate(),
+            ],
+            ['id = ?' => $id]
+        );
+
+        $session['status'] = self::STATUS_CANCELED;
+
+        return UcpResponse::ok($this->formatSession($session));
+    }
+
+    /* ------------------------------------------------------------------
+     *  PRIVATE HELPERS
+     * ----------------------------------------------------------------*/
+
+    /**
+     * Load a session row from the database.
+     *
+     * @return mixed[]|null
+     */
+    private function loadSession(string $id): ?array
+    {
+        $select = $this->connection->select()
+            ->from($this->resource->getTableName(self::TABLE))
+            ->where('id = ?', $id);
+
+        $row = $this->connection->fetchRow($select);
+
+        return $row ?: null;
     }
 
     /**
-     * @return array<string, array{quote_id: int, created_at: int, order_id?: string}>
+     * Find a session by idempotency key.
+     *
+     * @return mixed[]|null
      */
-    private function loadSessions(): array
+    private function findByIdempotencyKey(string $key): ?array
     {
-        $raw = (string) $this->scopeConfig->getValue(self::SESSIONS_PATH);
-        $decoded = $raw !== '' ? json_decode($raw, true) : null;
-        return is_array($decoded) ? $decoded : [];
-    }
+        $select = $this->connection->select()
+            ->from($this->resource->getTableName(self::TABLE))
+            ->where('idempotency_key = ?', $key);
 
-    private function saveSession(string $sessionId, int $quoteId): void
-    {
-        $map = $this->loadSessions();
-        // Evict sessions older than 2×TTL to keep the JSON small.
-        $cutoff = time() - self::SESSION_TTL * 2;
-        foreach ($map as $id => $entry) {
-            if ((int) ($entry['created_at'] ?? 0) < $cutoff && empty($entry['order_id'])) {
-                unset($map[$id]);
-            }
-        }
-        $map[$sessionId] = ['quote_id' => $quoteId, 'created_at' => time()];
-        $this->writeSessions($map);
+        $row = $this->connection->fetchRow($select);
+
+        return $row ?: null;
     }
 
     /**
-     * @param array<string, array{quote_id: int, created_at: int, order_id?: string}> $map
+     * Format a database row into the UCP session response shape.
+     *
+     * @param mixed[] $session
+     * @return mixed[]
      */
-    private function writeSessions(array $map): void
+    private function formatSession(array $session): array
     {
-        $this->configWriter->save(self::SESSIONS_PATH, json_encode($map));
-        $this->reinitableConfig->reinit();
+        return [
+            'id'          => $session['id'],
+            'status'      => $session['status'],
+            'line_items'  => $this->jsonDecode($session['line_items']),
+            'buyer'       => $this->jsonDecode($session['buyer']),
+            'fulfillment' => $this->jsonDecode($session['fulfillment']),
+            'payment'     => $this->jsonDecode($session['payment']),
+            'totals'      => $this->jsonDecode($session['totals']),
+            'messages'    => $this->jsonDecode($session['messages']),
+            'order_id'    => $session['order_id'] ? (int) $session['order_id'] : null,
+            'created_at'  => $session['created_at'],
+            'updated_at'  => $session['updated_at'],
+            'expires_at'  => $session['expires_at'],
+        ];
+    }
+
+    /**
+     * Map UCP/generic address fields to Magento quote address format.
+     *
+     * @param mixed[] $address
+     * @param mixed[] $buyer
+     * @return mixed[]
+     */
+    private function mapAddress(array $address, array $buyer): array
+    {
+        return [
+            'firstname'            => $buyer['first_name'] ?? 'Guest',
+            'lastname'             => $buyer['last_name'] ?? 'Shopper',
+            'email'                => $buyer['email'] ?? '',
+            'telephone'            => $buyer['phone'] ?? '0000000000',
+            'street'               => $address['streetAddress']
+                                      ?? $address['address_1']
+                                      ?? ($address['street'] ?? ''),
+            'city'                 => $address['addressLocality']
+                                      ?? $address['city']
+                                      ?? '',
+            'region'               => $address['addressRegion']
+                                      ?? $address['state']
+                                      ?? ($address['region'] ?? ''),
+            'postcode'             => $address['postalCode']
+                                      ?? $address['postcode']
+                                      ?? '',
+            'country_id'           => $address['addressCountry']
+                                      ?? $address['country_id']
+                                      ?? ($address['country'] ?? 'US'),
+        ];
+    }
+
+    /**
+     * Safely decode a JSON string; return empty structure on failure.
+     *
+     * @return mixed
+     */
+    private function jsonDecode(string $json): mixed
+    {
+        $decoded = json_decode($json, true);
+        return $decoded ?? [];
     }
 }

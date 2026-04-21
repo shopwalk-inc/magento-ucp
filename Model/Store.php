@@ -1,63 +1,104 @@
 <?php
-/**
- * Copyright © Shopwalk Inc. All rights reserved.
- * Licensed under GPL-2.0-or-later.
- */
+
 declare(strict_types=1);
 
 namespace Shopwalk\Ucp\Model;
 
-use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollectionFactory;
+use Shopwalk\Ucp\Api\StoreInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\StoreManagerInterface;
-use Shopwalk\Ucp\Api\StoreInterface;
+use Magento\Catalog\Model\Product\Attribute\Source\Status as ProductStatus;
+use Magento\Catalog\Model\Product\Visibility;
+use Magento\CatalogInventory\Api\StockRegistryInterface;
 
+/**
+ * Returns public store metadata for UCP consumers.
+ */
 class Store implements StoreInterface
 {
+    private const UCP_VERSION = '2026-04-08';
+
     public function __construct(
-        private readonly ScopeConfigInterface $scopeConfig,
-        private readonly StoreManagerInterface $storeManager,
-        private readonly ProductMetadataInterface $productMetadata,
-        private readonly ProductCollectionFactory $productCollectionFactory,
-        private readonly CategoryCollectionFactory $categoryCollectionFactory,
-        private readonly Config $config,
-        private readonly UcpEnvelope $envelope,
-    ) {}
+        private StoreManagerInterface    $storeManager,
+        private ProductCollectionFactory $productCollectionFactory,
+        private ScopeConfigInterface     $scopeConfig,
+        private StockRegistryInterface   $stockRegistry
+    ) {
+    }
 
-    public function getInfo(): array
+    /**
+     * @inheritdoc
+     */
+    public function getStore(): array
     {
-        $store = $this->storeManager->getStore();
+        $store    = $this->storeManager->getStore();
+        $baseUrl  = rtrim($store->getBaseUrl(), '/');
 
-        $productCount = $this->productCollectionFactory->create()
-            ->addAttributeToFilter('status', 1)
-            ->getSize();
+        $storeName = $this->scopeConfig->getValue(
+            'general/store_information/name',
+            ScopeInterface::SCOPE_STORE
+        ) ?: $store->getName();
 
-        $categoryCount = $this->categoryCollectionFactory->create()
-            ->addAttributeToFilter('is_active', 1)
-            ->getSize();
+        $description = $this->scopeConfig->getValue(
+            'design/head/default_description',
+            ScopeInterface::SCOPE_STORE
+        ) ?: '';
+
+        $currency = $store->getCurrentCurrencyCode();
+
+        $pluginVersion = $this->scopeConfig->getValue(
+            'shopwalk/ucp/plugin_version',
+            ScopeInterface::SCOPE_STORE
+        ) ?? '1.0.0';
+
+        $partnerId = $this->scopeConfig->getValue(
+            'shopwalk/ucp/partner_id',
+            ScopeInterface::SCOPE_STORE
+        );
+
+        $licenseKey = $this->scopeConfig->getValue(
+            'shopwalk/ucp/license_key',
+            ScopeInterface::SCOPE_STORE
+        );
+
+        // Total visible product count
+        $collection = $this->productCollectionFactory->create();
+        $collection->addAttributeToFilter('status', ProductStatus::STATUS_ENABLED);
+        $collection->addAttributeToFilter(
+            'visibility',
+            ['in' => [Visibility::VISIBILITY_IN_CATALOG, Visibility::VISIBILITY_BOTH]]
+        );
+        $productCount = $collection->getSize();
+
+        // In-stock count
+        $inStockCollection = $this->productCollectionFactory->create();
+        $inStockCollection->addAttributeToFilter('status', ProductStatus::STATUS_ENABLED);
+        $inStockCollection->addAttributeToFilter(
+            'visibility',
+            ['in' => [Visibility::VISIBILITY_IN_CATALOG, Visibility::VISIBILITY_BOTH]]
+        );
+        $inStockCollection->joinField(
+            'is_in_stock',
+            'cataloginventory_stock_item',
+            'is_in_stock',
+            'product_id=entity_id',
+            '{{table}}.is_in_stock=1'
+        );
+        $inStockCount = $inStockCollection->getSize();
 
         return [
-            'name' => (string) $this->scopeConfig->getValue(
-                'general/store_information/name',
-                ScopeInterface::SCOPE_STORE
-            ),
-            'url' => $store->getBaseUrl(),
-            'platform' => 'magento2',
-            'platform_version' => $this->productMetadata->getVersion(),
-            'ucp_version' => Config::UCP_VERSION,
-            'currency' => $store->getCurrentCurrencyCode(),
-            'country' => (string) $this->scopeConfig->getValue(
-                'general/country/default',
-                ScopeInterface::SCOPE_STORE
-            ),
-            'product_count' => (int) $productCount,
-            'categories_count' => (int) $categoryCount,
-            'shopwalk_connected' => $this->config->isConnected(),
-            'shopwalk_partner_id' => $this->config->getPartnerId(),
-            'ucp' => $this->envelope->build([]),
+            'name'                => $storeName,
+            'url'                 => $baseUrl,
+            'description'         => $description,
+            'currency'            => $currency,
+            'product_count'       => $productCount,
+            'in_stock_count'      => $inStockCount,
+            'shopwalk_connected'  => !empty($licenseKey),
+            'shopwalk_partner_id' => $partnerId,
+            'ucp_version'         => self::UCP_VERSION,
+            'plugin_version'      => $pluginVersion,
         ];
     }
 }

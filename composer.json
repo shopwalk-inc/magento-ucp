@@ -1,29 +1,11 @@
 {
-    "name": "shopwalk-inc/module-ucp",
-    "description": "Universal Commerce Protocol (UCP) adapter for Magento 2 — makes any Magento store discoverable and purchasable by AI shopping agents",
+    "name": "shopwalk/magento-ucp",
+    "description": "Shopwalk Universal Commerce Protocol (UCP) module for Magento 2",
     "type": "magento2-module",
-    "license": "GPL-2.0-or-later",
-    "keywords": ["magento", "magento2", "ucp", "ai", "shopping-agent", "commerce-protocol", "shopwalk"],
-    "homepage": "https://github.com/shopwalk-inc/magento-ucp",
-    "support": {
-        "issues": "https://github.com/shopwalk-inc/magento-ucp/issues",
-        "source": "https://github.com/shopwalk-inc/magento-ucp"
-    },
+    "license": "proprietary",
     "require": {
-        "php": "^8.1 || ^8.2 || ^8.3",
-        "magento/framework": "^103.0 || ^104.0",
-        "magento/module-catalog": "^104.0 || ^105.0",
-        "magento/module-store": "^101.0 || ^102.0",
-        "magento/module-webapi": "^100.4 || ^101.0",
-        "magento/module-quote": "^101.2 || ^102.0",
-        "magento/module-sales": "^103.0 || ^104.0",
-        "magento/module-config": "^101.2 || ^102.0",
-        "magento/module-backend": "^102.0 || ^103.0",
-        "magento/module-configurable-product": "^100.4 || ^101.0",
-        "magento/module-cataloginventory": "^100.4 || ^101.0"
-    },
-    "suggest": {
-        "magento/module-inventory-catalog-api": "For MSI (Multi-Source Inventory) stock support"
+        "php": ">=8.1",
+        "magento/framework": "*"
     },
     "autoload": {
         "files": ["registration.php"],

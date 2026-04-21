@@ -1,35 +1,14 @@
 <?xml version="1.0"?>
-<!--
-  Default values for every config field the module reads. Overridden per
-  store in core_config_data via Stores → Configuration → Shopwalk → UCP.
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
-        <shopwalk_ucp>
-            <general>
+        <shopwalk>
+            <ucp>
                 <enabled>1</enabled>
-            </general>
-            <license>
-                <key></key>
-                <partner_id></partner_id>
-                <webhook_secret></webhook_secret>
-            </license>
-            <sync>
-                <api_base>https://api.shopwalk.com/api/v1</api_base>
-                <state>idle</state>
-                <last_sync_at></last_sync_at>
-            </sync>
-            <payment>
-                <shopwalk_ucp>
-                    <active>1</active>
-                    <model>Shopwalk\Ucp\Model\UcpPaymentMethod</model>
-                    <title>Shopwalk UCP (AI Agent Purchase)</title>
-                    <order_status>processing</order_status>
-                    <is_offline>1</is_offline>
-                    <group>offline</group>
-                </shopwalk_ucp>
-            </payment>
-        </shopwalk_ucp>
+                <license_key/>
+                <api_url>https://api.shopwalk.com</api_url>
+                <signing_secret/>
+            </ucp>
+        </shopwalk>
     </default>
 </config>

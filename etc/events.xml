@@ -1,16 +1,8 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="catalog_product_save_after">
-        <observer name="shopwalk_ucp_product_save" instance="Shopwalk\Ucp\Observer\ProductSaveAfter"/>
-    </event>
-    <event name="catalog_product_delete_before">
-        <observer name="shopwalk_ucp_product_delete" instance="Shopwalk\Ucp\Observer\ProductDeleteAfter"/>
-    </event>
     <event name="sales_order_save_after">
-        <observer name="shopwalk_ucp_order_status" instance="Shopwalk\Ucp\Observer\OrderStatusChange"/>
-    </event>
-    <event name="admin_system_config_changed_section_shopwalk_ucp">
-        <observer name="shopwalk_ucp_config_saved" instance="Shopwalk\Ucp\Observer\ConfigSave"/>
+        <observer name="shopwalk_ucp_order_status_observer"
+                  instance="Shopwalk\Ucp\Observer\OrderStatusObserver"/>
     </event>
 </config>
