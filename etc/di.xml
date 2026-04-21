@@ -1,21 +1,23 @@
 <?xml version="1.0"?>
-<!--
-  Interface → implementation bindings. Every Api/ interface is resolved
-  to its Model/ implementation here so Magento's webapi.xml routes and
-  constructor injection find the right class.
--->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
 
+    <!-- API interface preferences -->
+    <preference for="Shopwalk\Ucp\Api\DiscoveryInterface"
+                type="Shopwalk\Ucp\Model\Discovery"/>
+    <preference for="Shopwalk\Ucp\Api\CheckoutSessionInterface"
+                type="Shopwalk\Ucp\Model\CheckoutSession"/>
+    <preference for="Shopwalk\Ucp\Api\OrderInterface"
+                type="Shopwalk\Ucp\Model\Order"/>
     <preference for="Shopwalk\Ucp\Api\StoreInterface"
                 type="Shopwalk\Ucp\Model\Store"/>
-    <preference for="Shopwalk\Ucp\Api\ProductsInterface"
-                type="Shopwalk\Ucp\Model\ProductProvider"/>
-    <preference for="Shopwalk\Ucp\Api\CategoriesInterface"
-                type="Shopwalk\Ucp\Model\CategoryProvider"/>
-    <preference for="Shopwalk\Ucp\Api\CheckoutInterface"
-                type="Shopwalk\Ucp\Model\CheckoutSession"/>
-    <preference for="Shopwalk\Ucp\Api\SyncTriggerInterface"
-                type="Shopwalk\Ucp\Model\SyncTrigger"/>
+    <preference for="Shopwalk\Ucp\Api\ProductInterface"
+                type="Shopwalk\Ucp\Model\Product"/>
+    <preference for="Shopwalk\Ucp\Api\DirectCheckoutInterface"
+                type="Shopwalk\Ucp\Model\DirectCheckout"/>
+    <preference for="Shopwalk\Ucp\Api\OAuthInterface"
+                type="Shopwalk\Ucp\Model\OAuth"/>
+    <preference for="Shopwalk\Ucp\Api\WebhookInterface"
+                type="Shopwalk\Ucp\Model\Webhook"/>
 
 </config>

@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+
+    <!-- OAuth Clients -->
+    <table name="shopwalk_ucp_oauth_clients" resource="default" engine="innodb"
+           comment="Shopwalk UCP OAuth Clients">
+        <column xsi:type="varchar" name="client_id" length="64" nullable="false"
+                comment="Client ID"/>
+        <column xsi:type="varchar" name="client_secret_hash" length="255" nullable="false"
+                comment="Hashed Client Secret"/>
+        <column xsi:type="text" name="redirect_uris" nullable="false"
+                comment="Redirect URIs (JSON)"/>
+        <column xsi:type="text" name="scopes_allowed" nullable="false"
+                comment="Allowed Scopes (JSON)"/>
+        <column xsi:type="text" name="signing_jwk" nullable="true"
+                comment="Signing JWK (JSON)"/>
+        <column xsi:type="varchar" name="ucp_profile_url" length="512" nullable="true"
+                comment="UCP Profile URL"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="client_id"/>
+        </constraint>
+    </table>
+
+    <!-- OAuth Tokens -->
+    <table name="shopwalk_ucp_oauth_tokens" resource="default" engine="innodb"
+           comment="Shopwalk UCP OAuth Tokens">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true"
+                comment="Token ID"/>
+        <column xsi:type="varchar" name="token_type" length="30" nullable="false"
+                comment="Token Type (authorization_code, access, refresh)"/>
+        <column xsi:type="varchar" name="token_hash" length="255" nullable="false"
+                comment="Hashed Token"/>
+        <column xsi:type="varchar" name="client_id" length="64" nullable="false"
+                comment="Client ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="true"
+                comment="User ID"/>
+        <column xsi:type="text" name="scopes" nullable="false"
+                comment="Scopes (JSON)"/>
+        <column xsi:type="varchar" name="code_challenge" length="128" nullable="true"
+                comment="PKCE Code Challenge"/>
+        <column xsi:type="varchar" name="code_challenge_method" length="10" nullable="true"
+                comment="PKCE Code Challenge Method"/>
+        <column xsi:type="timestamp" name="expires_at" on_update="false" nullable="false"
+                comment="Expires At"/>
+        <column xsi:type="timestamp" name="revoked_at" on_update="false" nullable="true"
+                comment="Revoked At"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <index referenceId="SHOPWALK_UCP_OAUTH_TOKENS_CLIENT_ID" indexType="btree">
+            <column name="client_id"/>
+        </index>
+        <index referenceId="SHOPWALK_UCP_OAUTH_TOKENS_TOKEN_HASH" indexType="btree">
+            <column name="token_hash"/>
+        </index>
+    </table>
+
+    <!-- Checkout Sessions -->
+    <table name="shopwalk_ucp_checkout_sessions" resource="default" engine="innodb"
+           comment="Shopwalk UCP Checkout Sessions">
+        <column xsi:type="varchar" name="id" length="64" nullable="false"
+                comment="Session ID (chk_xxxxx)"/>
+        <column xsi:type="varchar" name="client_id" length="64" nullable="true"
+                comment="Client ID"/>
+        <column xsi:type="int" name="user_id" unsigned="true" nullable="true"
+                comment="User ID"/>
+        <column xsi:type="varchar" name="status" length="30" nullable="false"
+                comment="Status (incomplete, ready_for_complete, completed, canceled)"/>
+        <column xsi:type="text" name="line_items" nullable="false"
+                comment="Line Items (JSON)"/>
+        <column xsi:type="text" name="buyer" nullable="false"
+                comment="Buyer Info (JSON)"/>
+        <column xsi:type="text" name="fulfillment" nullable="false"
+                comment="Fulfillment Info (JSON)"/>
+        <column xsi:type="text" name="payment" nullable="false"
+                comment="Payment Info (JSON)"/>
+        <column xsi:type="text" name="totals" nullable="false"
+                comment="Totals (JSON)"/>
+        <column xsi:type="text" name="messages" nullable="false"
+                comment="Messages (JSON)"/>
+        <column xsi:type="int" name="order_id" unsigned="true" nullable="true"
+                comment="Magento Order ID"/>
+        <column xsi:type="varchar" name="idempotency_key" length="128" nullable="true"
+                comment="Idempotency Key"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" on_update="true" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Updated At"/>
+        <column xsi:type="timestamp" name="expires_at" on_update="false" nullable="false"
+                comment="Expires At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="SHOPWALK_UCP_CHECKOUT_SESSIONS_IDEMPOTENCY_KEY">
+            <column name="idempotency_key"/>
+        </constraint>
+        <index referenceId="SHOPWALK_UCP_CHECKOUT_SESSIONS_CLIENT_ID" indexType="btree">
+            <column name="client_id"/>
+        </index>
+        <index referenceId="SHOPWALK_UCP_CHECKOUT_SESSIONS_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+    </table>
+
+    <!-- Webhook Subscriptions -->
+    <table name="shopwalk_ucp_webhook_subscriptions" resource="default" engine="innodb"
+           comment="Shopwalk UCP Webhook Subscriptions">
+        <column xsi:type="varchar" name="id" length="64" nullable="false"
+                comment="Subscription ID (wh_xxxxx)"/>
+        <column xsi:type="varchar" name="client_id" length="64" nullable="false"
+                comment="Client ID"/>
+        <column xsi:type="varchar" name="callback_url" length="512" nullable="false"
+                comment="Callback URL"/>
+        <column xsi:type="text" name="event_types" nullable="false"
+                comment="Event Types (JSON)"/>
+        <column xsi:type="varchar" name="secret" length="128" nullable="false"
+                comment="Webhook Secret"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <index referenceId="SHOPWALK_UCP_WEBHOOK_SUBSCRIPTIONS_CLIENT_ID" indexType="btree">
+            <column name="client_id"/>
+        </index>
+    </table>
+
+    <!-- Webhook Queue -->
+    <table name="shopwalk_ucp_webhook_queue" resource="default" engine="innodb"
+           comment="Shopwalk UCP Webhook Queue">
+        <column xsi:type="int" name="id" unsigned="true" nullable="false" identity="true"
+                comment="Queue Entry ID"/>
+        <column xsi:type="varchar" name="subscription_id" length="64" nullable="false"
+                comment="Subscription ID"/>
+        <column xsi:type="varchar" name="event_type" length="50" nullable="false"
+                comment="Event Type"/>
+        <column xsi:type="mediumtext" name="payload" nullable="false"
+                comment="Event Payload (JSON)"/>
+        <column xsi:type="int" name="attempts" unsigned="true" nullable="false" default="0"
+                comment="Delivery Attempts"/>
+        <column xsi:type="timestamp" name="next_attempt_at" on_update="false" nullable="true"
+                comment="Next Attempt At"/>
+        <column xsi:type="timestamp" name="delivered_at" on_update="false" nullable="true"
+                comment="Delivered At"/>
+        <column xsi:type="timestamp" name="failed_at" on_update="false" nullable="true"
+                comment="Failed At"/>
+        <column xsi:type="text" name="last_error" nullable="true"
+                comment="Last Error"/>
+        <column xsi:type="timestamp" name="created_at" on_update="false" nullable="false"
+                default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="id"/>
+        </constraint>
+        <index referenceId="SHOPWALK_UCP_WEBHOOK_QUEUE_SUBSCRIPTION_ID" indexType="btree">
+            <column name="subscription_id"/>
+        </index>
+        <index referenceId="SHOPWALK_UCP_WEBHOOK_QUEUE_NEXT_ATTEMPT_AT" indexType="btree">
+            <column name="next_attempt_at"/>
+        </index>
+    </table>
+
+</schema>

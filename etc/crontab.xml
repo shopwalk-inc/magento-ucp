@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
-    <group id="shopwalk">
-        <job name="shopwalk_ucp_flush_queue"
-             instance="Shopwalk\Ucp\Cron\FlushSyncQueue"
+    <group id="default">
+        <job name="shopwalk_ucp_webhook_flush" instance="Shopwalk\Ucp\Cron\WebhookFlush"
              method="execute">
-            <schedule>*/5 * * * *</schedule>
+            <schedule>* * * * *</schedule>
+        </job>
+        <job name="shopwalk_ucp_session_cleanup" instance="Shopwalk\Ucp\Cron\SessionCleanup"
+             method="execute">
+            <schedule>0 * * * *</schedule>
         </job>
     </group>
 </config>

@@ -7,47 +7,31 @@
         </tab>
         <section id="shopwalk_ucp" translate="label" sortOrder="10"
                  showInDefault="1" showInWebsite="1" showInStore="1">
+            <class>separator-top</class>
             <label>UCP Settings</label>
             <tab>shopwalk</tab>
             <resource>Shopwalk_Ucp::config</resource>
             <group id="general" translate="label" sortOrder="10"
-                   showInDefault="1" showInWebsite="0" showInStore="0">
+                   showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General</label>
                 <field id="enabled" translate="label comment" type="select" sortOrder="10"
-                       showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Enable UCP Endpoints</label>
-                    <comment>Exposes the /rest/V1/ucp/* REST endpoints and /.well-known/ucp discovery.</comment>
+                       showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable</label>
+                    <comment>Enable or disable the Shopwalk UCP module.</comment>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <config_path>shopwalk/ucp/enabled</config_path>
                 </field>
-            </group>
-            <group id="license" translate="label" sortOrder="20"
-                   showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Shopwalk License (optional)</label>
-                <field id="key" translate="label comment" type="obscure" sortOrder="10"
-                       showInDefault="1" showInWebsite="0" showInStore="0">
+                <field id="license_key" translate="label comment" type="text" sortOrder="20"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>License Key</label>
-                    <comment><![CDATA[Your Shopwalk license key from the <a href="https://shopwalk.com/partners" target="_blank">Partner Portal</a>. Leave blank to run UCP standalone.]]></comment>
-                    <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    <comment>Enter your Shopwalk license key.</comment>
+                    <config_path>shopwalk/ucp/license_key</config_path>
                 </field>
-                <field id="partner_id" translate="label" type="text" sortOrder="20"
-                       showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Partner ID</label>
-                    <comment>Populated automatically on activation.</comment>
-                    <frontend_model>Shopwalk\Ucp\Block\Adminhtml\System\Config\ReadonlyField</frontend_model>
-                </field>
-            </group>
-            <group id="sync" translate="label" sortOrder="30"
-                   showInDefault="1" showInWebsite="0" showInStore="0">
-                <label>Sync</label>
-                <field id="api_base" translate="label comment" type="text" sortOrder="10"
-                       showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Shopwalk API Base URL</label>
-                    <comment>Default: https://api.shopwalk.com/api/v1. Override for staging.</comment>
-                </field>
-                <field id="last_sync_at" translate="label" type="text" sortOrder="20"
-                       showInDefault="1" showInWebsite="0" showInStore="0">
-                    <label>Last Sync</label>
-                    <frontend_model>Shopwalk\Ucp\Block\Adminhtml\System\Config\ReadonlyField</frontend_model>
+                <field id="api_url" translate="label comment" type="text" sortOrder="30"
+                       showInDefault="1" showInWebsite="1" showInStore="0">
+                    <label>API URL</label>
+                    <comment>Shopwalk API endpoint URL.</comment>
+                    <config_path>shopwalk/ucp/api_url</config_path>
                 </field>
             </group>
         </section>
