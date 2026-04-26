@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1]
+
+### Added
+- "Allow Shopwalk to surface my store in AI discovery" toggle on the connected-state dashboard. POSTs to the new `/api/v1/plugin/discovery/{disable,enable}` endpoints; mirrors the API state to `shopwalk_ucp/discovery/paused` config so the dashboard renders the right toggle position. Existing orders are unaffected; sync pauses while paused.
+- `Shopwalk\Ucp\Model\DiscoveryToggle` for the API call + local mirror.
+- `Shopwalk\Ucp\Controller\Adminhtml\Discovery\Toggle` AJAX endpoint at `shopwalk_ucp/discovery/toggle`.
+
+## [1.0.0]
+
 ### Added
 - Initial Magento 2 module: `Shopwalk_Ucp`
 - UCP discovery at `/.well-known/ucp`

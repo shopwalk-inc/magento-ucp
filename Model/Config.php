@@ -19,7 +19,7 @@ use Magento\Store\Model\ScopeInterface;
 class Config
 {
     public const UCP_VERSION = '2026-04-08';
-    public const MODULE_VERSION = '1.0.0';
+    public const MODULE_VERSION = '1.0.1';
 
     public const PATH_ENABLED = 'shopwalk_ucp/general/enabled';
     public const PATH_LICENSE_KEY = 'shopwalk_ucp/license/key';
@@ -29,6 +29,7 @@ class Config
     public const PATH_SYNC_STATE = 'shopwalk_ucp/sync/state';
     public const PATH_LAST_SYNC_AT = 'shopwalk_ucp/sync/last_sync_at';
     public const PATH_SYNC_QUEUE = 'shopwalk_ucp/sync/queue';
+    public const PATH_DISCOVERY_PAUSED = 'shopwalk_ucp/discovery/paused';
 
     public function __construct(
         private readonly ScopeConfigInterface $scopeConfig,
@@ -99,6 +100,17 @@ class Config
     public function setLastSyncAt(string $iso): void
     {
         $this->configWriter->save(self::PATH_LAST_SYNC_AT, $iso);
+        $this->reinitableConfig->reinit();
+    }
+
+    public function isDiscoveryPaused(): bool
+    {
+        return (bool) $this->scopeConfig->getValue(self::PATH_DISCOVERY_PAUSED);
+    }
+
+    public function setDiscoveryPaused(bool $paused): void
+    {
+        $this->configWriter->save(self::PATH_DISCOVERY_PAUSED, $paused ? '1' : '0');
         $this->reinitableConfig->reinit();
     }
 }

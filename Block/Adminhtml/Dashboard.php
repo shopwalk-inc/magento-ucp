@@ -69,4 +69,14 @@ class Dashboard extends Template
     {
         return Config::MODULE_VERSION;
     }
+
+    public function getDiscoveryToggleUrl(): string
+    {
+        return $this->getUrl('shopwalk_ucp/discovery/toggle');
+    }
+
+    public function isDiscoveryPaused(): bool
+    {
+        return $this->config->isDiscoveryPaused();
+    }
 }
