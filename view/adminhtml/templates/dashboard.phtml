@@ -50,6 +50,23 @@
     </div>
 
     <p id="shopwalk-ucp-status" style="margin-top:16px;color:#6b7280"></p>
+
+    <?php if ($block->isConnected()): ?>
+        <div style="margin-top:24px;padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb">
+            <label style="display:flex;gap:10px;align-items:center;cursor:pointer">
+                <input type="checkbox"
+                       id="shopwalk-ucp-discovery-toggle"
+                       data-url="<?= $escaper->escapeHtmlAttr($block->getDiscoveryToggleUrl()) ?>"
+                       <?= $block->isDiscoveryPaused() ? '' : 'checked' ?>
+                       style="transform:scale(1.2)">
+                <span style="font-weight:500"><?= $escaper->escapeHtml(__('Allow Shopwalk to surface my store in AI discovery')) ?></span>
+            </label>
+            <p style="margin:6px 0 0;color:#6b7280;font-size:12px">
+                <?= $escaper->escapeHtml(__('When off, your store and products are hidden from AI search, shopping flows, and store pages. The plugin stays connected; existing orders are unaffected.')) ?>
+            </p>
+            <span id="shopwalk-ucp-discovery-status" style="color:#6b7280;font-size:12px"></span>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -72,6 +89,33 @@
                 $status.text(msg).css('color', '#dc2626');
             }).always(function() {
                 $btn.prop('disabled', false).text('<?= $escaper->escapeJs(__('Sync Now')) ?>');
+            });
+        });
+
+        $('#shopwalk-ucp-discovery-toggle').on('change', function() {
+            var $cb = $(this);
+            var $status = $('#shopwalk-ucp-discovery-status');
+            var enable = $cb.is(':checked');
+            if (!enable && !confirm('<?= $escaper->escapeJs(__('Pause AI discovery? Your store and products will be hidden from search, AI shopping, and store pages within ~2 minutes. Existing orders are unaffected.')) ?>')) {
+                $cb.prop('checked', true);
+                return;
+            }
+            $cb.prop('disabled', true);
+            $status.text(enable ? '<?= $escaper->escapeJs(__('Resuming...')) ?>' : '<?= $escaper->escapeJs(__('Pausing...')) ?>').css('color', '#6b7280');
+            $.ajax({
+                url: $cb.data('url'),
+                method: 'POST',
+                dataType: 'json',
+                data: { enable: enable ? '1' : '0', form_key: window.FORM_KEY },
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).done(function(resp) {
+                $status.text(resp.success ? (enable ? 'Discovery resumed.' : 'Discovery paused.') : 'Failed.').css('color', resp.success ? '#059669' : '#dc2626');
+            }).fail(function(xhr) {
+                $cb.prop('checked', !enable);
+                var msg = (xhr.responseJSON && xhr.responseJSON.message) || 'Failed';
+                $status.text(msg).css('color', '#dc2626');
+            }).always(function() {
+                $cb.prop('disabled', false);
             });
         });
     });
