@@ -5,14 +5,14 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Observer;
+namespace Shopwalk\Magento\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
 use Psr\Log\LoggerInterface;
-use Shopwalk\Ucp\Model\Config;
-use Shopwalk\Ucp\Model\SyncClient;
+use Shopwalk\Magento\Model\Config;
+use Shopwalk\Magento\Model\SyncClient;
 
 /**
  * sales_order_save_after — notify shopwalk-api when a UCP order changes

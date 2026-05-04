@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
@@ -14,7 +14,7 @@ use Magento\Catalog\Model\Product\Visibility;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Webapi\Exception as WebapiException;
 use Magento\Framework\Phrase;
-use Shopwalk\Ucp\Api\ProductsInterface;
+use Shopwalk\Magento\Api\ProductsInterface;
 
 class ProductProvider implements ProductsInterface
 {

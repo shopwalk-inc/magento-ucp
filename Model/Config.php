@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface as ConfigWriter;

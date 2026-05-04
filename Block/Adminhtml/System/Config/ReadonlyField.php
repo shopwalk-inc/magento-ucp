@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Block\Adminhtml\System\Config;
+namespace Shopwalk\Magento\Block\Adminhtml\System\Config;
 
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
-use Shopwalk\Ucp\Api\WebhookInterface;
+use Shopwalk\Magento\Api\WebhookInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\DB\Adapter\AdapterInterface;
 use Magento\Framework\Stdlib\DateTime\DateTime;

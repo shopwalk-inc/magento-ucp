@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Cron;
+namespace Shopwalk\Magento\Cron;
 
 use Magento\Framework\App\ResourceConnection;
 use Psr\Log\LoggerInterface;
-use Shopwalk\Ucp\Helper\WebhookDelivery;
+use Shopwalk\Magento\Helper\WebhookDelivery;
 
 /**
  * Runs every minute. Delivers pending webhook queue items with exponential backoff.

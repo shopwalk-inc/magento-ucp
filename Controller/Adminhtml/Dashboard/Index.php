@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Controller\Adminhtml\Dashboard;
+namespace Shopwalk\Magento\Controller\Adminhtml\Dashboard;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
@@ -13,7 +13,7 @@ use Magento\Framework\View\Result\PageFactory;
 
 class Index extends Action
 {
-    public const ADMIN_RESOURCE = 'Shopwalk_Ucp::dashboard';
+    public const ADMIN_RESOURCE = 'Shopwalk_Magento::dashboard';
 
     public function __construct(
         Context $context,
@@ -25,7 +25,7 @@ class Index extends Action
     public function execute()
     {
         $page = $this->pageFactory->create();
-        $page->setActiveMenu('Shopwalk_Ucp::main');
+        $page->setActiveMenu('Shopwalk_Magento::main');
         $page->getConfig()->getTitle()->prepend(__('Shopwalk UCP'));
         return $page;
     }

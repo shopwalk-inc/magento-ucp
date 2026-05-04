@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0]
 
 ### Added
-- Initial Magento 2 module: `Shopwalk_Ucp`
+- Initial Magento 2 module: `Shopwalk_Magento`
 - UCP discovery at `/.well-known/ucp`
 - Read endpoints: `/rest/V1/ucp/{store,products,categories}`
 - Checkout endpoints under `/rest/V1/ucp/checkout-sessions`

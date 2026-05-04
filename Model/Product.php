@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
-use Shopwalk\Ucp\Api\ProductInterface;
+use Shopwalk\Magento\Api\ProductInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Catalog\Model\Product\Attribute\Source\Status as ProductStatus;
 use Magento\Catalog\Model\Product\Visibility;

@@ -3,7 +3,7 @@
         xsi:noNamespaceSchemaLocation="urn:magento:app:etc/routes.xsd">
     <router id="admin">
         <route id="shopwalk_ucp" frontName="shopwalk_ucp">
-            <module name="Shopwalk_Ucp"/>
+            <module name="Shopwalk_Magento"/>
         </route>
     </router>
 </config>

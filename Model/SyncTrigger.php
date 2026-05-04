@@ -5,12 +5,12 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
 use Magento\Framework\App\Request\Http as HttpRequest;
 use Magento\Framework\Phrase;
 use Magento\Framework\Webapi\Exception as WebapiException;
-use Shopwalk\Ucp\Api\SyncTriggerInterface;
+use Shopwalk\Magento\Api\SyncTriggerInterface;
 
 /**
  * Implements POST /rest/V1/ucp/sync/trigger. HMAC-SHA256 is verified against

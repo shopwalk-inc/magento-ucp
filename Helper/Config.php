@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Helper;
+namespace Shopwalk\Magento\Helper;
 
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;

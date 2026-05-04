@@ -7,12 +7,12 @@
                 <resource id="Magento_Backend::stores">
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
-                            <resource id="Shopwalk_Ucp::config" title="Shopwalk UCP Configuration"
+                            <resource id="Shopwalk_Magento::config" title="Shopwalk UCP Configuration"
                                       sortOrder="100"/>
                         </resource>
                     </resource>
                 </resource>
-                <resource id="Shopwalk_Ucp::manage" title="Manage Shopwalk UCP Settings"
+                <resource id="Shopwalk_Magento::manage" title="Manage Shopwalk UCP Settings"
                           sortOrder="200"/>
             </resource>
         </resources>
