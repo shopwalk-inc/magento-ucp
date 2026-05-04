@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Cron;
+namespace Shopwalk\Magento\Cron;
 
 use Magento\Framework\App\ResourceConnection;
 use Psr\Log\LoggerInterface;

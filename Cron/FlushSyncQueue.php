@@ -5,9 +5,9 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Cron;
+namespace Shopwalk\Magento\Cron;
 
-use Shopwalk\Ucp\Model\SyncQueue;
+use Shopwalk\Magento\Model\SyncQueue;
 
 /**
  * Scheduled by etc/crontab.xml every 5 minutes. Drains at most one

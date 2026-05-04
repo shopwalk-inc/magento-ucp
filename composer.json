@@ -1,6 +1,6 @@
 {
-    "name": "shopwalk/magento-ucp",
-    "description": "Shopwalk Universal Commerce Protocol (UCP) module for Magento 2",
+    "name": "shopwalk-inc/shopwalk-magento",
+    "description": "Shopwalk for Magento 2 — UCP-compliant agent commerce module",
     "type": "magento2-module",
     "license": "proprietary",
     "require": {
@@ -10,7 +10,7 @@
     "autoload": {
         "files": ["registration.php"],
         "psr-4": {
-            "Shopwalk\\Ucp\\": ""
+            "Shopwalk\\Magento\\": ""
         }
     }
 }

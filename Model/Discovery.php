@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
-use Shopwalk\Ucp\Api\DiscoveryInterface;
+use Shopwalk\Magento\Api\DiscoveryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;

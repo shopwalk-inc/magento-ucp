@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
-use Shopwalk\Ucp\Api\DirectCheckoutInterface;
+use Shopwalk\Magento\Api\DirectCheckoutInterface;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\Quote\Api\CartManagementInterface;

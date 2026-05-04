@@ -5,12 +5,12 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Model;
+namespace Shopwalk\Magento\Model;
 
 use Magento\Catalog\Api\CategoryManagementInterface;
 use Magento\Catalog\Api\Data\CategoryTreeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Shopwalk\Ucp\Api\CategoriesInterface;
+use Shopwalk\Magento\Api\CategoriesInterface;
 
 class CategoryProvider implements CategoriesInterface
 {

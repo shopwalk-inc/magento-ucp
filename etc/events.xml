@@ -3,6 +3,6 @@
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
     <event name="sales_order_save_after">
         <observer name="shopwalk_ucp_order_status_observer"
-                  instance="Shopwalk\Ucp\Observer\OrderStatusObserver"/>
+                  instance="Shopwalk\Magento\Observer\OrderStatusObserver"/>
     </event>
 </config>

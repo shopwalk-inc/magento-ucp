@@ -5,12 +5,12 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Controller\Adminhtml\Sync;
+namespace Shopwalk\Magento\Controller\Adminhtml\Sync;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Shopwalk\Ucp\Model\SyncQueue;
+use Shopwalk\Magento\Model\SyncQueue;
 
 /**
  * AJAX endpoint hit by the dashboard "Sync Now" button. Triggers a full sync
@@ -18,7 +18,7 @@ use Shopwalk\Ucp\Model\SyncQueue;
  */
 class Now extends Action
 {
-    public const ADMIN_RESOURCE = 'Shopwalk_Ucp::sync';
+    public const ADMIN_RESOURCE = 'Shopwalk_Magento::sync';
 
     public function __construct(
         Context $context,

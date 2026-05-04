@@ -2,10 +2,10 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
     <menu>
-        <add id="Shopwalk_Ucp::main"
+        <add id="Shopwalk_Magento::main"
              title="Shopwalk UCP"
-             module="Shopwalk_Ucp"
-             resource="Shopwalk_Ucp::dashboard"
+             module="Shopwalk_Magento"
+             resource="Shopwalk_Magento::dashboard"
              sortOrder="90"
              action="shopwalk_ucp/dashboard/index"/>
     </menu>

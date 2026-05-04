@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Api;
+namespace Shopwalk\Magento\Api;
 
 interface ProductsInterface
 {

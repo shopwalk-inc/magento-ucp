@@ -5,13 +5,13 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Observer;
+namespace Shopwalk\Magento\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\Message\ManagerInterface as MessageManager;
-use Shopwalk\Ucp\Model\Config;
-use Shopwalk\Ucp\Model\License;
+use Shopwalk\Magento\Model\Config;
+use Shopwalk\Magento\Model\License;
 
 /**
  * Fired when admin saves Stores → Config → Shopwalk UCP. If a license key is

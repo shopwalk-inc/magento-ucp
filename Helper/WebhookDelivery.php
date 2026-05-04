@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Helper;
+namespace Shopwalk\Magento\Helper;
 
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\HTTP\Client\CurlFactory;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Psr\Log\LoggerInterface;
-use Shopwalk\Ucp\Model\UcpResponse;
+use Shopwalk\Magento\Model\UcpResponse;
 
 /**
  * Builds full order payloads and manages webhook delivery with exponential backoff.

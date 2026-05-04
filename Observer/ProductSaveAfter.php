@@ -5,13 +5,13 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Observer;
+namespace Shopwalk\Magento\Observer;
 
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Shopwalk\Ucp\Model\Config;
-use Shopwalk\Ucp\Model\SyncQueue;
+use Shopwalk\Magento\Model\Config;
+use Shopwalk\Magento\Model\SyncQueue;
 
 class ProductSaveAfter implements ObserverInterface
 {

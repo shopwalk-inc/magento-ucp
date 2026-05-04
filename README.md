@@ -1,18 +1,18 @@
-# Magento UCP
+# Shopwalk for Magento
 
-**Universal Commerce Protocol (UCP) adapter for Magento 2.** Makes any Magento 2 store fully discoverable and purchasable by AI shopping agents.
+**Shopwalk plugin for Magento 2.** UCP-compliant. Makes any Magento 2 store fully discoverable and purchasable by AI shopping agents.
 
 [![License: GPL v2+](https://img.shields.io/badge/License-GPL%20v2%2B-blue.svg)](LICENSE)
 [![Magento 2](https://img.shields.io/badge/Magento-2.4.6%2B-orange.svg)](https://magento.com)
 [![PHP](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://php.net)
 
-Same architecture as [woocommerce-ucp](https://github.com/shopwalk-inc/woocommerce-ucp) — different platform.
+Same architecture as [shopwalk-woocommerce](https://github.com/shopwalk-inc/shopwalk-woocommerce) — different platform.
 
 ---
 
 ## What It Is
 
-A Magento 2 module (`Shopwalk_Ucp`) that exposes a standards-compliant UCP surface:
+A Magento 2 module (`Shopwalk_Magento`) that exposes a standards-compliant UCP surface:
 
 - **Discovery** via `/.well-known/ucp` (UCP profile per [ucp.dev](https://ucp.dev) spec)
 - **Catalog** via `/rest/V1/ucp/products`, `/rest/V1/ucp/products/:id`, `/rest/V1/ucp/categories`
@@ -50,8 +50,8 @@ Works with any UCP-compatible AI agent. Ships with optional Shopwalk integration
 ### Via Composer (recommended)
 
 ```bash
-composer require shopwalk-inc/module-ucp
-bin/magento module:enable Shopwalk_Ucp
+composer require shopwalk-inc/shopwalk-magento
+bin/magento module:enable Shopwalk_Magento
 bin/magento setup:upgrade
 bin/magento setup:di:compile
 bin/magento cache:flush
@@ -59,9 +59,9 @@ bin/magento cache:flush
 
 ### Manual
 
-1. Download the latest release from [Releases](https://github.com/shopwalk-inc/magento-ucp/releases)
-2. Extract into `app/code/Shopwalk/Ucp/`
-3. `bin/magento module:enable Shopwalk_Ucp && bin/magento setup:upgrade && bin/magento setup:di:compile && bin/magento cache:flush`
+1. Download the latest release from [Releases](https://github.com/shopwalk-inc/shopwalk-magento/releases)
+2. Extract into `app/code/Shopwalk/Magento/`
+3. `bin/magento module:enable Shopwalk_Magento && bin/magento setup:upgrade && bin/magento setup:di:compile && bin/magento cache:flush`
 
 ---
 
@@ -128,4 +128,4 @@ GPL-2.0-or-later — same as Magento 2.
 
 - [ucp.dev](https://ucp.dev) — Universal Commerce Protocol specification
 - [shopwalk.com](https://shopwalk.com) — Shopwalk Partner Portal
-- [woocommerce-ucp](https://github.com/shopwalk-inc/woocommerce-ucp) — WordPress/WooCommerce equivalent
+- [shopwalk-woocommerce](https://github.com/shopwalk-inc/shopwalk-woocommerce) — WordPress/WooCommerce equivalent

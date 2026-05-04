@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Controller\WellKnown;
+namespace Shopwalk\Magento\Controller\WellKnown;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Shopwalk\Ucp\Api\DiscoveryInterface;
+use Shopwalk\Magento\Api\DiscoveryInterface;
 
 /**
  * Frontend controller for /.well-known/ucp.

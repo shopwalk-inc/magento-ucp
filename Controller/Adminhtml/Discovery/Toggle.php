@@ -5,12 +5,12 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Controller\Adminhtml\Discovery;
+namespace Shopwalk\Magento\Controller\Adminhtml\Discovery;
 
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
 use Magento\Framework\Controller\Result\JsonFactory;
-use Shopwalk\Ucp\Model\DiscoveryToggle;
+use Shopwalk\Magento\Model\DiscoveryToggle;
 
 /**
  * AJAX endpoint hit by the dashboard pause/resume toggle.
@@ -19,7 +19,7 @@ use Shopwalk\Ucp\Model\DiscoveryToggle;
  */
 class Toggle extends Action
 {
-    public const ADMIN_RESOURCE = 'Shopwalk_Ucp::sync';
+    public const ADMIN_RESOURCE = 'Shopwalk_Magento::sync';
 
     public function __construct(
         Context $context,

@@ -5,16 +5,16 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Block\Adminhtml;
+namespace Shopwalk\Magento\Block\Adminhtml;
 
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
-use Shopwalk\Ucp\Model\Config;
-use Shopwalk\Ucp\Model\SyncQueue;
+use Shopwalk\Magento\Model\Config;
+use Shopwalk\Magento\Model\SyncQueue;
 
 class Dashboard extends Template
 {
-    protected $_template = 'Shopwalk_Ucp::dashboard.phtml';
+    protected $_template = 'Shopwalk_Magento::dashboard.phtml';
 
     public function __construct(
         Context $context,

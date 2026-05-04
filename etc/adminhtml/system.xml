@@ -10,7 +10,7 @@
             <class>separator-top</class>
             <label>UCP Settings</label>
             <tab>shopwalk</tab>
-            <resource>Shopwalk_Ucp::config</resource>
+            <resource>Shopwalk_Magento::config</resource>
             <group id="general" translate="label" sortOrder="10"
                    showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>General</label>

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Observer;
+namespace Shopwalk\Magento\Observer;
 
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Shopwalk\Ucp\Helper\WebhookDelivery;
+use Shopwalk\Magento\Helper\WebhookDelivery;
 
 /**
  * Fires a webhook when an order created through UCP changes status.

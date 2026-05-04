@@ -5,7 +5,7 @@
  */
 declare(strict_types=1);
 
-namespace Shopwalk\Ucp\Controller\Router;
+namespace Shopwalk\Magento\Controller\Router;
 
 use Magento\Framework\App\ActionFactory;
 use Magento\Framework\App\ActionInterface;
@@ -35,6 +35,6 @@ class WellKnownRouter implements RouterInterface
         $request->setModuleName('shopwalk_ucp')
             ->setControllerName('wellknown')
             ->setActionName('ucp');
-        return $this->actionFactory->create(\Shopwalk\Ucp\Controller\WellKnown\Ucp::class);
+        return $this->actionFactory->create(\Shopwalk\Magento\Controller\WellKnown\Ucp::class);
     }
 }

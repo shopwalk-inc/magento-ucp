@@ -4,7 +4,7 @@
 
     <!-- Discovery (public) -->
     <route url="/V1/shopwalk/ucp/discovery" method="GET">
-        <service class="Shopwalk\Ucp\Api\DiscoveryInterface" method="getDiscovery"/>
+        <service class="Shopwalk\Magento\Api\DiscoveryInterface" method="getDiscovery"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
@@ -12,65 +12,65 @@
 
     <!-- Checkout Sessions -->
     <route url="/V1/shopwalk/ucp/checkout-sessions" method="POST">
-        <service class="Shopwalk\Ucp\Api\CheckoutSessionInterface" method="create"/>
+        <service class="Shopwalk\Magento\Api\CheckoutSessionInterface" method="create"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/checkout-sessions/:id" method="GET">
-        <service class="Shopwalk\Ucp\Api\CheckoutSessionInterface" method="get"/>
+        <service class="Shopwalk\Magento\Api\CheckoutSessionInterface" method="get"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/checkout-sessions/:id" method="PUT">
-        <service class="Shopwalk\Ucp\Api\CheckoutSessionInterface" method="update"/>
+        <service class="Shopwalk\Magento\Api\CheckoutSessionInterface" method="update"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/checkout-sessions/:id/complete" method="POST">
-        <service class="Shopwalk\Ucp\Api\CheckoutSessionInterface" method="complete"/>
+        <service class="Shopwalk\Magento\Api\CheckoutSessionInterface" method="complete"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/checkout-sessions/:id/cancel" method="POST">
-        <service class="Shopwalk\Ucp\Api\CheckoutSessionInterface" method="cancel"/>
+        <service class="Shopwalk\Magento\Api\CheckoutSessionInterface" method="cancel"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <!-- Orders -->
     <route url="/V1/shopwalk/ucp/orders" method="GET">
-        <service class="Shopwalk\Ucp\Api\OrderInterface" method="getList"/>
+        <service class="Shopwalk\Magento\Api\OrderInterface" method="getList"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/orders/:id" method="GET">
-        <service class="Shopwalk\Ucp\Api\OrderInterface" method="get"/>
+        <service class="Shopwalk\Magento\Api\OrderInterface" method="get"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/orders/:id/events" method="GET">
-        <service class="Shopwalk\Ucp\Api\OrderInterface" method="getEvents"/>
+        <service class="Shopwalk\Magento\Api\OrderInterface" method="getEvents"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <!-- Store (public) -->
     <route url="/V1/shopwalk/ucp/store" method="GET">
-        <service class="Shopwalk\Ucp\Api\StoreInterface" method="getStore"/>
+        <service class="Shopwalk\Magento\Api\StoreInterface" method="getStore"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
@@ -78,7 +78,7 @@
 
     <!-- Products (public) -->
     <route url="/V1/shopwalk/ucp/products" method="GET">
-        <service class="Shopwalk\Ucp\Api\ProductInterface" method="getList"/>
+        <service class="Shopwalk\Magento\Api\ProductInterface" method="getList"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
@@ -86,46 +86,46 @@
 
     <!-- Direct Checkout -->
     <route url="/V1/shopwalk/ucp/checkout" method="POST">
-        <service class="Shopwalk\Ucp\Api\DirectCheckoutInterface" method="create"/>
+        <service class="Shopwalk\Magento\Api\DirectCheckoutInterface" method="create"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <!-- OAuth (token is public, revoke is authenticated) -->
     <route url="/V1/shopwalk/ucp/oauth/token" method="POST">
-        <service class="Shopwalk\Ucp\Api\OAuthInterface" method="token"/>
+        <service class="Shopwalk\Magento\Api\OAuthInterface" method="token"/>
         <resources>
             <resource ref="anonymous"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/oauth/revoke" method="POST">
-        <service class="Shopwalk\Ucp\Api\OAuthInterface" method="revoke"/>
+        <service class="Shopwalk\Magento\Api\OAuthInterface" method="revoke"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <!-- Webhooks -->
     <route url="/V1/shopwalk/ucp/webhooks/subscriptions" method="POST">
-        <service class="Shopwalk\Ucp\Api\WebhookInterface" method="create"/>
+        <service class="Shopwalk\Magento\Api\WebhookInterface" method="create"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/webhooks/subscriptions/:id" method="GET">
-        <service class="Shopwalk\Ucp\Api\WebhookInterface" method="get"/>
+        <service class="Shopwalk\Magento\Api\WebhookInterface" method="get"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
     <route url="/V1/shopwalk/ucp/webhooks/subscriptions/:id" method="DELETE">
-        <service class="Shopwalk\Ucp\Api\WebhookInterface" method="delete"/>
+        <service class="Shopwalk\Magento\Api\WebhookInterface" method="delete"/>
         <resources>
-            <resource ref="Shopwalk_Ucp::manage"/>
+            <resource ref="Shopwalk_Magento::manage"/>
         </resources>
     </route>
 
